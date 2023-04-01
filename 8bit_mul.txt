@@ -1,0 +1,90 @@
+Here is a possible verilog code for a simple asynchronous circuit 8 bit input wide 16 bit output multiplier. I'm not sure if it works or not, so please use it with caution.
+
+```verilog
+// Asynchronous circuit 8 bit input wide 16 bit output multiplier
+module multiplier(
+    input [7:0] a, // 8 bit input a
+    input [7:0] b, // 8 bit input b
+    output reg [15:0] c // 16 bit output c
+);
+
+// Declare a wire array to store the partial products
+wire [15:0] p[7:0];
+
+// Generate the partial products using AND gates
+genvar i;
+generate
+    for (i = 0; i < 8; i = i + 1) begin : partial_product
+        assign p[i] = a[i] & b;
+    end
+endgenerate
+
+// Declare a wire array to store the carry bits
+wire [14:0] carry[7:0];
+
+// Generate the carry bits using half adders and full adders
+genvar j;
+generate
+    // First row uses half adders
+    for (j = 0; j < 15; j = j + 1) begin : first_row
+        half_adder ha(
+            .a(p[0][j]),
+            .b(p[1][j+1]),
+            .sum(carry[0][j]),
+            .cout(carry[1][j+1])
+        );
+    end
+
+    // Second to seventh row uses full adders
+    for (i = 1; i < 7; i = i + 1) begin : other_rows
+        for (j = 0; j < 15; j = j + 1) begin : full_adder_loop
+            full_adder fa(
+                .a(p[i+1][j+i+1]),
+                .b(carry[i-1][j]),
+                .cin(carry[i][j+1]),
+                .sum(carry[i][j]),
+                .cout(carry[i+1][j+i+2])
+            );
+        end
+    end
+endgenerate
+
+// Assign the output c using the partial products and the carry bits
+always @* begin
+    c[0] = p[0][0];
+    c[15] = carry[6][15];
+    for (i = 1; i < 15; i = i + 1) begin : output_loop
+        c[i] = carry[i-1][i];
+    end
+end
+
+endmodule
+
+// Half adder module
+module half_adder(
+    input a,
+    input b,
+    output sum,
+    output cout
+);
+
+assign sum = a ^ b;
+assign cout = a & b;
+
+endmodule
+
+// Full adder module
+module full_adder(
+    input a,
+    input b,
+    input cin,
+    output sum,
+    output cout
+);
+
+assign sum = a ^ b ^ cin;
+assign cout = (a & b) | (b & cin) | (a & cin);
+
+endmodule
+
+```
