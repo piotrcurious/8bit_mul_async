@@ -1,0 +1,19 @@
+module multiplier(
+    input  wire [7:0]  a,
+    input  wire [7:0]  b,
+    output wire [15:0] c
+);
+
+wire [15:0] pp [0:7];
+
+genvar i;
+generate
+    for (i = 0; i < 8; i = i + 1) begin : gen_pp
+        assign pp[i] = b[i] ? ({8'b0, a} << i) : 16'b0;
+    end
+endgenerate
+
+assign c = pp[0] + pp[1] + pp[2] + pp[3]
+         + pp[4] + pp[5] + pp[6] + pp[7];
+
+endmodule
